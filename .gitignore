@@ -1,0 +1,14 @@
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Front-end (pour plus tard)
+node_modules/
+
+# Divers
+.env
+*.log
+
+# Plan de travail personnel (privé)
+PLAN.md
