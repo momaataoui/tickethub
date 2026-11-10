@@ -5,8 +5,6 @@ Les **organisateurs** créent des événements avec un nombre de places limité,
 
 > **Règle clé :** ne jamais vendre plus de places que la capacité, **même si plusieurs personnes achètent en même temps**.
 
-Projet d'entraînement pour les entretiens de stage PFE, centré sur les **transactions** et la **gestion de la concurrence** (`@Transactional`, `@Version`, verrous).
-
 ---
 
 ## 🧱 Stack technique
