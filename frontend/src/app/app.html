@@ -1,11 +1,11 @@
 <!-- Barre de navigation : affichée sur toutes les pages -->
 <nav class="navbar navbar-dark bg-dark mb-4">
   <div class="container">
-    <span class="navbar-brand fw-bold">🎫 TicketHub</span>
+    <a class="navbar-brand fw-bold" routerLink="/events">🎫 TicketHub</a>
   </div>
 </nav>
 
 <!-- Ici, Angular affiche le composant de la page courante (selon l'URL) -->
-<main class="container">
+<main class="container pb-5">
   <router-outlet />
 </main>

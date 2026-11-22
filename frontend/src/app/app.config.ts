@@ -1,13 +1,19 @@
-import { provideHttpClient, withFetch } from '@angular/common/http';
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { registerLocaleData } from '@angular/common';
+import { provideHttpClient } from '@angular/common/http';
+import localeFr from '@angular/common/locales/fr';
+import { ApplicationConfig, LOCALE_ID, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
+
+// Dates et nombres en français : "dimanche 20 décembre 2026", "1 500"
+registerLocaleData(localeFr);
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideHttpClient(withFetch()), // active HttpClient (appels vers l'API Spring)
+    provideHttpClient(), // active HttpClient (appels vers l'API Spring)
+    { provide: LOCALE_ID, useValue: 'fr-FR' },
   ],
 };
