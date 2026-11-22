@@ -29,28 +29,33 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     // ---------- Erreurs métier ----------
 
-    @ExceptionHandler(EventNotFoundException.class)
-    public ProblemDetail handleNotFound(EventNotFoundException ex) {
+    // 404 : la ressource demandée n'existe pas
+    @ExceptionHandler({ EventNotFoundException.class, CategoryNotFoundException.class })
+    public ProblemDetail handleNotFound(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
+    // 400 : la requête est incohérente
     @ExceptionHandler(InvalidEventDatesException.class)
-    public ProblemDetail handleInvalidDates(InvalidEventDatesException ex) {
+    public ProblemDetail handleBadRequest(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
-    @ExceptionHandler(DuplicateCategoryNameException.class)
-    public ProblemDetail handleDuplicateCategory(DuplicateCategoryNameException ex) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
-    }
-
+    // 403 : l'utilisateur n'a pas le droit (RG3)
     @ExceptionHandler(NotEventOwnerException.class)
-    public ProblemDetail handleNotOwner(NotEventOwnerException ex) {
+    public ProblemDetail handleForbidden(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
     }
 
-    @ExceptionHandler(EventCancelledException.class)
-    public ProblemDetail handleCancelled(EventCancelledException ex) {
+    // 409 : la requête est valide, mais entre en conflit avec l'état actuel des données
+    @ExceptionHandler({
+            DuplicateCategoryNameException.class, // RG12
+            EventCancelledException.class,
+            InvalidCapacityException.class,       // RG8
+            CategoryHasTicketsException.class,    // RG14
+            LastCategoryException.class           // RG11
+    })
+    public ProblemDetail handleConflict(RuntimeException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 

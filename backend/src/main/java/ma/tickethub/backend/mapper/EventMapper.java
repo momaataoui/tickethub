@@ -58,6 +58,13 @@ public class EventMapper {
         // ni l'organisateur, ni le statut, ni les catégories ne changent ici
     }
 
+    public void updateEntity(TicketCategory category, CategoryRequest request) {
+        category.setName(request.name());
+        category.setPrice(request.price()); // RG9 : les billets déjà vendus gardent leur prix payé
+        category.setCapacity(request.capacity());
+        // soldSeats ne change jamais ici : seul un achat le modifie
+    }
+
     // ---------- Entité -> DTO (affichage) ----------
 
     public EventResponse toResponse(Event event) {

@@ -83,8 +83,9 @@ public class EventService {
 
     // ---------- Règles de gestion ----------
 
-    // Charge un événement que l'utilisateur connecté a le droit de modifier
-    private Event findEditableEvent(Long id) {
+    // Charge un événement que l'utilisateur connecté a le droit de modifier.
+    // Public : CategoryService l'utilise aussi (la règle RG3 n'est écrite qu'une fois)
+    public Event findEditableEvent(Long id) {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new EventNotFoundException(id));
 
