@@ -1,0 +1,118 @@
+<a routerLink="/events" class="btn btn-link px-0 mb-3">← Retour aux événements</a>
+
+<h1 class="h3 mb-4">Créer un événement</h1>
+
+<!-- Erreur renvoyée par l'API (ProblemDetail.detail) -->
+@if (serverError(); as message) {
+  <div class="alert alert-danger">{{ message }}</div>
+}
+
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <!-- ========== Informations de l'événement ========== -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <h2 class="h5 mb-3">Informations</h2>
+
+      <div class="mb-3">
+        <label class="form-label" for="title">Titre *</label>
+        <input id="title" class="form-control" formControlName="title"
+               [class.is-invalid]="errorOf(form.controls.title)" />
+        <div class="invalid-feedback">{{ errorOf(form.controls.title) }}</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="venue">Lieu *</label>
+        <input id="venue" class="form-control" formControlName="venue"
+               placeholder="Complexe Mohammed V, Casablanca"
+               [class.is-invalid]="errorOf(form.controls.venue)" />
+        <div class="invalid-feedback">{{ errorOf(form.controls.venue) }}</div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label" for="startsAt">Date de l'événement *</label>
+          <input id="startsAt" type="datetime-local" class="form-control" formControlName="startsAt"
+                 [class.is-invalid]="errorOf(form.controls.startsAt)" />
+          <div class="invalid-feedback">{{ errorOf(form.controls.startsAt) }}</div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label class="form-label" for="salesStartAt">Ouverture de la billetterie *</label>
+          <input id="salesStartAt" type="datetime-local" class="form-control" formControlName="salesStartAt"
+                 [class.is-invalid]="errorOf(form.controls.salesStartAt)
+                   || (form.hasError('salesAfterStart') && form.controls.salesStartAt.touched)" />
+          <div class="invalid-feedback">
+            {{ errorOf(form.controls.salesStartAt) ?? 'La billetterie doit ouvrir avant l\'événement' }}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label class="form-label" for="description">Description</label>
+        <textarea id="description" rows="3" class="form-control" formControlName="description"
+                  [class.is-invalid]="errorOf(form.controls.description)"></textarea>
+        <div class="invalid-feedback">{{ errorOf(form.controls.description) }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== Catégories (FormArray) ========== -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 mb-0">Catégories de billets</h2>
+        <button type="button" class="btn btn-outline-primary btn-sm" (click)="addCategory()">
+          + Ajouter une catégorie
+        </button>
+      </div>
+
+      <div formArrayName="categories">
+        @for (category of categories.controls; track category; let i = $index) {
+          <div class="row g-2 align-items-start mb-2" [formGroupName]="i">
+            <div class="col-md-4">
+              <input class="form-control" formControlName="name" placeholder="VIP, GOLD, NORMAL…"
+                     [attr.aria-label]="'Nom de la catégorie ' + (i + 1)"
+                     [class.is-invalid]="errorOf(category.controls.name)" />
+              <div class="invalid-feedback">{{ errorOf(category.controls.name) }}</div>
+            </div>
+            <div class="col-md-3">
+              <div class="input-group has-validation">
+                <input type="number" min="0" class="form-control" formControlName="price"
+                       [attr.aria-label]="'Prix de la catégorie ' + (i + 1)"
+                       [class.is-invalid]="errorOf(category.controls.price)" />
+                <span class="input-group-text">DH</span>
+                <div class="invalid-feedback">{{ errorOf(category.controls.price) }}</div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="input-group has-validation">
+                <input type="number" min="1" class="form-control" formControlName="capacity"
+                       [attr.aria-label]="'Capacité de la catégorie ' + (i + 1)"
+                       [class.is-invalid]="errorOf(category.controls.capacity)" />
+                <span class="input-group-text">places</span>
+                <div class="invalid-feedback">{{ errorOf(category.controls.capacity) }}</div>
+              </div>
+            </div>
+            <div class="col-md-2">
+              <button type="button" class="btn btn-outline-danger w-100"
+                      [disabled]="categories.length === 1"
+                      (click)="removeCategory(i)">
+                Supprimer
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2">
+    <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+      @if (submitting()) {
+        <span class="spinner-border spinner-border-sm me-1"></span>
+      }
+      Créer l'événement
+    </button>
+    <a routerLink="/events" class="btn btn-outline-secondary">Annuler</a>
+  </div>
+</form>
