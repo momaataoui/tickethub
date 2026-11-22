@@ -44,6 +44,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 
+    @ExceptionHandler(NotEventOwnerException.class)
+    public ProblemDetail handleNotOwner(NotEventOwnerException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+
+    @ExceptionHandler(EventCancelledException.class)
+    public ProblemDetail handleCancelled(EventCancelledException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
     // ---------- Validation (@Valid) : un message par champ ----------
 
     @Override

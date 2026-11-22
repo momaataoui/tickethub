@@ -14,10 +14,15 @@ import lombok.RequiredArgsConstructor;
 import ma.tickethub.backend.dto.CategoryRequest;
 import ma.tickethub.backend.dto.CreateEventRequest;
 import ma.tickethub.backend.dto.EventResponse;
+import ma.tickethub.backend.dto.UpdateEventRequest;
 import ma.tickethub.backend.entity.Event;
+import ma.tickethub.backend.entity.EventStatus;
+import ma.tickethub.backend.entity.User;
 import ma.tickethub.backend.exception.DuplicateCategoryNameException;
+import ma.tickethub.backend.exception.EventCancelledException;
 import ma.tickethub.backend.exception.EventNotFoundException;
 import ma.tickethub.backend.exception.InvalidEventDatesException;
+import ma.tickethub.backend.exception.NotEventOwnerException;
 import ma.tickethub.backend.mapper.EventMapper;
 import ma.tickethub.backend.repository.EventRepository;
 
@@ -57,7 +62,43 @@ public class EventService {
         return eventMapper.toResponse(event);
     }
 
+    // US4 : modifier les informations d'un événement
+    @Transactional
+    public EventResponse update(Long id, UpdateEventRequest request) {
+        Event event = findEditableEvent(id);
+        validateDates(request.salesStartAt(), request.startsAt());
+
+        eventMapper.updateEntity(event, request);
+        // Pas de save() : l'entité est "managed", Hibernate fait l'UPDATE au commit (dirty checking)
+        return eventMapper.toResponse(event);
+    }
+
+    // US6 : annuler un événement (suppression logique : la ligne reste en base)
+    @Transactional
+    public EventResponse cancel(Long id) {
+        Event event = findEditableEvent(id);
+        event.setStatus(EventStatus.CANCELLED); // -> getSalesStatus() renvoie CLOSED
+        return eventMapper.toResponse(event);
+    }
+
     // ---------- Règles de gestion ----------
+
+    // Charge un événement que l'utilisateur connecté a le droit de modifier
+    private Event findEditableEvent(Long id) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new EventNotFoundException(id));
+
+        // RG3 : seul l'organisateur de l'événement peut le modifier
+        User currentUser = currentUserService.getCurrentUser();
+        if (!event.getOrganizer().getId().equals(currentUser.getId())) {
+            throw new NotEventOwnerException(id);
+        }
+        // Un événement annulé est définitif
+        if (event.getStatus() == EventStatus.CANCELLED) {
+            throw new EventCancelledException(id);
+        }
+        return event;
+    }
 
     private void validateDates(Instant salesStartAt, Instant startsAt) {
         if (!salesStartAt.isBefore(startsAt)) {

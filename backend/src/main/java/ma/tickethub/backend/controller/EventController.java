@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 import ma.tickethub.backend.dto.CreateEventRequest;
 import ma.tickethub.backend.dto.EventResponse;
+import ma.tickethub.backend.dto.UpdateEventRequest;
 import ma.tickethub.backend.service.EventService;
 
 @RestController
@@ -47,5 +49,18 @@ public class EventController {
     @GetMapping("/{id}")
     public EventResponse findById(@PathVariable Long id) {
         return eventService.findById(id);
+    }
+
+    // PUT /api/events/5 -> 200 OK
+    @PutMapping("/{id}")
+    public EventResponse update(@PathVariable Long id, @Valid @RequestBody UpdateEventRequest request) {
+        return eventService.update(id, request);
+    }
+
+    // POST /api/events/5/cancel -> 200 OK
+    // POST et pas DELETE : l'événement n'est pas supprimé, il change d'état
+    @PostMapping("/{id}/cancel")
+    public EventResponse cancel(@PathVariable Long id) {
+        return eventService.cancel(id);
     }
 }

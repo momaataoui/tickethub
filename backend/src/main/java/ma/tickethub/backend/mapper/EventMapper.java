@@ -12,6 +12,7 @@ import ma.tickethub.backend.dto.CategoryRequest;
 import ma.tickethub.backend.dto.CategoryResponse;
 import ma.tickethub.backend.dto.CreateEventRequest;
 import ma.tickethub.backend.dto.EventResponse;
+import ma.tickethub.backend.dto.UpdateEventRequest;
 import ma.tickethub.backend.entity.Event;
 import ma.tickethub.backend.entity.TicketCategory;
 
@@ -44,6 +45,17 @@ public class EventMapper {
         category.setCapacity(request.capacity());
         category.setSoldSeats(0); // une nouvelle catégorie n'a rien vendu
         return category;
+    }
+
+    // ---------- DTO -> Entité existante (modification) ----------
+
+    public void updateEntity(Event event, UpdateEventRequest request) {
+        event.setTitle(request.title());
+        event.setDescription(request.description());
+        event.setVenue(request.venue());
+        event.setStartsAt(request.startsAt());
+        event.setSalesStartAt(request.salesStartAt());
+        // ni l'organisateur, ni le statut, ni les catégories ne changent ici
     }
 
     // ---------- Entité -> DTO (affichage) ----------
