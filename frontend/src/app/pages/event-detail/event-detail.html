@@ -1,0 +1,82 @@
+<a routerLink="/events" class="btn btn-link px-0 mb-3">← Retour aux événements</a>
+
+@if (loading()) {
+  <div class="text-center py-5">
+    <div class="spinner-border text-primary" role="status"></div>
+  </div>
+}
+
+@if (error(); as message) {
+  <div class="alert alert-warning">{{ message }}</div>
+}
+
+@if (event(); as event) {
+  <!-- En-tête de l'événement -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <app-sales-status-badge [status]="event.status" [salesStatus]="event.salesStatus" />
+
+      <h1 class="h3 mt-2">{{ event.title }}</h1>
+
+      <p class="mb-1">📅 {{ event.startsAt | date: 'EEEE d MMMM y, HH:mm' }}</p>
+      <p class="mb-1">📍 {{ event.venue }}</p>
+      <p class="text-muted small">Organisé par {{ event.organizerName }}</p>
+
+      @if (event.salesStatus === 'NOT_OPEN_YET' && event.status !== 'CANCELLED') {
+        <div class="alert alert-info py-2 small mb-3">
+          La billetterie ouvre le {{ event.salesStartAt | date: 'd MMMM y à HH:mm' }}.
+        </div>
+      }
+
+      @if (event.description) {
+        <p class="mb-0">{{ event.description }}</p>
+      }
+    </div>
+  </div>
+
+  <!-- Tableau des catégories -->
+  <h2 class="h5 mb-3">Catégories de billets</h2>
+
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Catégorie</th>
+            <th class="text-end">Prix</th>
+            <th style="width: 35%">Places restantes</th>
+            <th class="text-end">Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (category of event.categories; track category.id) {
+            <tr [class.text-muted]="category.status === 'SOLD_OUT'">
+              <td class="fw-semibold">{{ category.name }}</td>
+              <td class="text-end">{{ category.price | number: '1.0-2' }} DH</td>
+              <td>
+                <div class="small mb-1">{{ category.availableSeats }} / {{ category.capacity }}</div>
+                <div class="progress" style="height: 6px">
+                  <div class="progress-bar"
+                       [style.width.%]="soldPercent(category.capacity, category.availableSeats)"></div>
+                </div>
+              </td>
+              <td class="text-end">
+                @if (category.status === 'SOLD_OUT') {
+                  <span class="badge text-bg-danger">Complet</span>
+                } @else {
+                  <span class="badge text-bg-success">Disponible</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+        <tfoot class="table-light">
+          <tr>
+            <td colspan="2" class="fw-semibold">Total</td>
+            <td colspan="2">{{ event.availableSeats }} / {{ event.totalCapacity }} places restantes</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+}
