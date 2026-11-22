@@ -32,7 +32,25 @@
         <p class="mb-0">{{ event.description }}</p>
       }
     </div>
+
+    <!-- Actions de l'organisateur : masquées si l'événement est annulé (le backend refuserait : 409) -->
+    @if (event.status !== 'CANCELLED') {
+      <div class="card-footer bg-white d-flex gap-2">
+        <a class="btn btn-outline-primary btn-sm" [routerLink]="['/events', event.id, 'edit']">Modifier</a>
+        <button type="button" class="btn btn-outline-danger btn-sm"
+                [disabled]="cancelling()" (click)="cancelEvent(event)">
+          @if (cancelling()) {
+            <span class="spinner-border spinner-border-sm me-1"></span>
+          }
+          Annuler l'événement
+        </button>
+      </div>
+    }
   </div>
+
+  @if (actionError(); as message) {
+    <div class="alert alert-danger">{{ message }}</div>
+  }
 
   <!-- Tableau des catégories -->
   <h2 class="h5 mb-3">Catégories de billets</h2>

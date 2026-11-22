@@ -11,5 +11,6 @@ export const routes: Routes = [
   { path: 'events', component: EventList, title: 'Événements | TicketHub' },
   { path: 'events/new', component: EventForm, title: 'Créer un événement | TicketHub' }, // AVANT :id
   { path: 'events/:id', component: EventDetail, title: 'Détail | TicketHub' }, // :id -> input "id"
+  { path: 'events/:id/edit', component: EventForm, title: 'Modifier | TicketHub' }, // même formulaire
   { path: '**', redirectTo: 'events' }, // URL inconnue -> retour à la liste
 ];

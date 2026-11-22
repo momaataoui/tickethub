@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import {
   AbstractControl,
   NonNullableFormBuilder,
@@ -9,8 +9,9 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { Observable } from 'rxjs';
 
-import { CreateEventRequest } from '../../models/event.model';
+import { EventResponse } from '../../models/event.model';
 import { ProblemDetail } from '../../models/problem-detail.model';
 import { EventService } from '../../services/event.service';
 
@@ -29,20 +30,36 @@ const salesBeforeStart: ValidatorFn = (group: AbstractControl): ValidationErrors
     : null;
 };
 
-// "2026-12-20T20:00" (champ datetime-local, heure locale) -> "2026-12-20T19:00:00.000Z" (Instant Java)
+// ---------- Conversions de dates ----------
+
+// "2026-12-20T21:00" (champ datetime-local, heure locale) -> "2026-12-20T20:00:00.000Z" (Instant Java, UTC)
 const toIso = (localDateTime: string): string => new Date(localDateTime).toISOString();
 
-// Page /events/new : création d'un événement avec ses catégories (US1)
+// Inverse : "2026-12-20T20:00:00Z" (API, UTC) -> "2026-12-20T21:00" (champ datetime-local)
+const toLocalInput = (iso: string): string => {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
+// Un seul formulaire, deux modes :
+//   /events/new      -> création     (US1) : POST, avec les catégories
+//   /events/:id/edit -> modification (US4) : PUT, sans les catégories (elles ont leurs propres endpoints)
 @Component({
   selector: 'app-event-form',
   imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './event-form.html',
 })
-export class EventForm {
+export class EventForm implements OnInit {
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly eventService = inject(EventService);
   private readonly router = inject(Router);
 
+  // Présent seulement sur /events/:id/edit (withComponentInputBinding)
+  readonly id = input<string>();
+  protected readonly isEdit = computed(() => this.id() !== undefined);
+
+  protected readonly loading = signal(false);
   protected readonly submitting = signal(false);
   protected readonly serverError = signal<string | null>(null);
 
@@ -61,6 +78,35 @@ export class EventForm {
 
   protected get categories() {
     return this.form.controls.categories;
+  }
+
+  ngOnInit(): void {
+    if (this.isEdit()) {
+      // Désactivé = ignoré par la validation : les catégories ne font pas partie d'une modification
+      this.categories.disable();
+      this.loadEvent(Number(this.id()));
+    }
+  }
+
+  // Mode modification : pré-remplit le formulaire avec l'événement existant
+  private loadEvent(id: number): void {
+    this.loading.set(true);
+    this.eventService.getById(id).subscribe({
+      next: (event) => {
+        this.form.patchValue({
+          title: event.title,
+          description: event.description ?? '',
+          venue: event.venue,
+          startsAt: toLocalInput(event.startsAt),
+          salesStartAt: toLocalInput(event.salesStartAt),
+        });
+        this.loading.set(false);
+      },
+      error: (err: HttpErrorResponse) => {
+        this.loading.set(false);
+        this.showServerErrors(err);
+      },
+    });
   }
 
   // ---------- FormArray : liste dynamique de catégories ----------
@@ -94,21 +140,27 @@ export class EventForm {
     this.serverError.set(null);
 
     const value = this.form.getRawValue();
-    const request: CreateEventRequest = {
+    const common = {
       title: value.title.trim(),
       description: value.description.trim() || null,
       venue: value.venue.trim(),
       startsAt: toIso(value.startsAt),
       salesStartAt: toIso(value.salesStartAt),
-      categories: value.categories.map((c) => ({
-        name: c.name.trim(),
-        price: c.price,
-        capacity: c.capacity,
-      })),
     };
 
-    this.eventService.create(request).subscribe({
-      next: (created) => this.router.navigate(['/events', created.id]), // -> page détail
+    const request$: Observable<EventResponse> = this.isEdit()
+      ? this.eventService.update(Number(this.id()), common) // PUT : sans catégories
+      : this.eventService.create({
+          ...common,
+          categories: value.categories.map((c) => ({
+            name: c.name.trim(),
+            price: c.price,
+            capacity: c.capacity,
+          })),
+        });
+
+    request$.subscribe({
+      next: (event) => this.router.navigate(['/events', event.id]), // -> page détail
       error: (err: HttpErrorResponse) => {
         this.submitting.set(false);
         this.showServerErrors(err);

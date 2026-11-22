@@ -1,13 +1,20 @@
 <a routerLink="/events" class="btn btn-link px-0 mb-3">← Retour aux événements</a>
 
-<h1 class="h3 mb-4">Créer un événement</h1>
+<h1 class="h3 mb-4">{{ isEdit() ? 'Modifier l\'événement' : 'Créer un événement' }}</h1>
 
 <!-- Erreur renvoyée par l'API (ProblemDetail.detail) -->
 @if (serverError(); as message) {
   <div class="alert alert-danger">{{ message }}</div>
 }
 
-<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+<!-- Mode modification : chargement de l'événement existant -->
+@if (loading()) {
+  <div class="text-center py-5">
+    <div class="spinner-border text-primary" role="status"></div>
+  </div>
+}
+
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate [class.d-none]="loading()">
   <!-- ========== Informations de l'événement ========== -->
   <div class="card shadow-sm mb-4">
     <div class="card-body">
@@ -56,7 +63,12 @@
     </div>
   </div>
 
-  <!-- ========== Catégories (FormArray) ========== -->
+  <!-- ========== Catégories (FormArray) : en création seulement ========== -->
+  @if (isEdit()) {
+    <p class="text-muted small mb-4">
+      Les catégories ne se modifient pas ici : elles ont leurs propres règles (places déjà vendues…).
+    </p>
+  } @else {
   <div class="card shadow-sm mb-4">
     <div class="card-body">
       <div class="d-flex justify-content-between align-items-center mb-3">
@@ -105,14 +117,15 @@
       </div>
     </div>
   </div>
+  }
 
   <div class="d-flex gap-2">
     <button type="submit" class="btn btn-primary" [disabled]="submitting()">
       @if (submitting()) {
         <span class="spinner-border spinner-border-sm me-1"></span>
       }
-      Créer l'événement
+      {{ isEdit() ? 'Enregistrer les modifications' : 'Créer l\'événement' }}
     </button>
-    <a routerLink="/events" class="btn btn-outline-secondary">Annuler</a>
+    <a [routerLink]="isEdit() ? ['/events', id()] : ['/events']" class="btn btn-outline-secondary">Retour</a>
   </div>
 </form>
